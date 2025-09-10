@@ -1,22 +1,20 @@
 import krpc
 import utils
 import time
+from state_machine import BoosterStateMachine, State
+
+launch_params = {
+    "launch_pad_lat": -0.09721504062000887,
+    "launch_pad_lon": -74.55767383241698,
+    "inclination": 135,
+    "apoapsis": 100000
+}
 
 # Connect to KSP
 conn = krpc.connect(name='Booster Test')
 vessel = conn.space_center.active_vessel
+state_machine = BoosterStateMachine(conn, vessel, launch_params, State.COUNTDOWN)
 
-print(f"Controlling vessel: {vessel.name}")
+state_machine.run()
 
-# get starting lat/lon
-position = vessel.position(vessel.orbit.body.reference_frame)
-lp_lat = vessel.orbit.body.latitude_at_position(position, vessel.orbit.body.reference_frame)
-lp_lon = vessel.orbit.body.longitude_at_position(position, vessel.orbit.body.reference_frame)
-print(f"Launch pad position: {lp_lat}, {lp_lon}")
 
-while True:
-    impact_lat, impact_lon = utils.calculate_impact_position(conn, vessel.orbit.body, vessel.orbit)
-    print(f"Impact position: {impact_lat}, {impact_lon}")
-    distance = utils.great_circle_distance(lp_lat, lp_lon, impact_lat, impact_lon, vessel.orbit.body.equatorial_radius)
-    print(f"Distance from launch pad: {distance} meters")
-    time.sleep(1)
